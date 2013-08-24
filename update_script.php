@@ -101,7 +101,7 @@
 			exit(0);
 		case 'update':
 			update_script(
-				'https://raw.github.com/uuf6429/php-script-updater/master/update_script.php',
+				'https://raw.github.com/uuf6429/php-script-updater/master/update_script.php?nc='.mt_rand(),
 				array(
 					'current_version' => VERSION,
 					'try_run' => true,
