@@ -12,10 +12,14 @@
 			'version_regex' => '/define\\(\\s*[\'"]version[\'"]\\s*,\\s*[\'"](.*?)[\'"]\\s*\\)/i',	// Regular expression for finding version in target file.
 			'try_run' => true,																		// Try running downloaded file to ensure it works.
 			'on_event' => create_function('', ''),													// Used by updater to notify callee on event changes.
-			'target_file' => __FILE__,																// The file to be overwritten by the updater.
+			'target_file' => $_SERVER['SCRIPT_FILENAME'],											// The file to be overwritten by the updater.
 			'force_update' => false,																// Force local file to be overwritten by remote file regardless of version.
+			'try_run_cmd' => null,																	// Command called to verify the upgrade is fine.
 		), (array)$options);
+		if(is_null($options['try_run_cmd'])) // build command with the correct target_file
+			$options['try_run_cmd'] = 'php -f '.escapeshellarg($options['target_file']);
 		$notify = $options['on_event'];
+		$rollback = false;
 		$next_version = null;
 		static $intentions = array(-1=>'fail',0=>'ignore',1=>'update');
 		// process
@@ -38,17 +42,32 @@
 			$notify('warn', array('reason'=>'Backup operation failed', 'target'=>$options['target_file']));
 		if(!file_put_contents($options['target_file'], $data)){
 			$notify('warn', array('reason'=>'Failed writing to file', 'target'=>$options['target_file']));
-			if(!rename($options['target_file'].'.bak', $options['target_file']))
-				$notify('error', array('reason'=>'Rollback operation failed', 'target'=>$options['target_file'].'.bak'));
-			return;
+			$rollback = true;
 		}
-		if($options['try_run']){
-			
+		if(!$rollback && $options['try_run']){
+			$notify('before_try', array('options'=>$options));
+			ob_start();
+			$exit = null;
+			passthru($options['try_run_cmd'], $exit);
+			$out = ob_get_clean();
+			$notify('after_try', array('options'=>$options, 'output'=>$out, 'exitcode'=>$exit));
+			if($exit != 0){
+				$notify('warn', array('reason'=>'Downloaded update seems to be broken', 'output'=>$out, 'exitcode'=>$exit));
+				$rollback = true;
+			}
+		}
+		if($rollback){
+			$notify('before_rollback', array('options'=>$options));
+			if(!rename($options['target_file'].'.bak', $options['target_file']))
+				return $notify('error', array('reason'=>'Rollback operation failed', 'target'=>$options['target_file'].'.bak')) && false;
+			$notify('after_rollback', array('options'=>$options));
+			return;
 		}
 		if(!unlink($options['target_file'].'.bak'))
 			$notify('warn', array('reason'=>'Cleanup operation failed', 'target'=>$options['target_file'].'.bak'));
-		$notify('stop');
+		$notify('finish');
 	}
+	
 	
 	
 	
@@ -58,7 +77,7 @@
 	 * The code below is a sample of how the function is to be used.
 	 */
 	
-	define('VERSION', '0.0.2');
+	define('VERSION', '0.0.3');
 	
 	// no web access pls!
 	if(isset($_SERVER['SERVER_NAME']) || !isset($argv)){
