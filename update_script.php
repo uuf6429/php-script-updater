@@ -9,7 +9,7 @@
 		// initialize
 		$options = array_merge(array(
 			'current_version' => '0.0.0',															// Version of the current file/script.
-			'version_regex' => '/define\\(\\s*[\'"]version[\'"]\\s*,\\s*[\'"](.*?)[\'"]\\s*\\)\/i',	// Regular expression for finding version in target file.
+			'version_regex' => '/define\\(\\s*[\'"]version[\'"]\\s*,\\s*[\'"](.*?)[\'"]\\s*\\)/i',	// Regular expression for finding version in target file.
 			'try_run' => true,																		// Try running downloaded file to ensure it works.
 			'on_event' => create_function('', ''),													// Used by updater to notify callee on event changes.
 			'target_file' => __FILE__,																// The file to be overwritten by the updater.
@@ -20,8 +20,6 @@
 		static $intentions = array(-1=>'fail',0=>'ignore',1=>'update');
 		// process
 		$notify('start');
-		if(!rename($options['target_file'], $options['target_file'].'.bak'))
-			$notify('warn', array('reason'=>'Backup operation failed', 'target'=>$options['target_file']));
 		if(!($data = file_get_contents($update_url)))
 			return $notify('error', array('reason'=>'File download failed', 'target'=>$update_url)) && false;
 		if(!preg_match($options['version_regex'], $data, $next_version))
@@ -36,8 +34,14 @@
 			return $notify('warn', array('reason'=>'Update not required')) && false;
 		if($v_diff === -1 && !$options['force_update'])
 			return $notify('warn', array('reason'=>'Local file is newer than remote one', 'curr_version'=>$options['current_version'], 'next_version'=>$next_version)) && false;
-		if(!file_put_contents($options['target_file'], $data))
-			return $notify('error', array('reason'=>'Failed writing to file', 'target'=>$options['target_file'])) && false;
+		if(!rename($options['target_file'], $options['target_file'].'.bak'))
+			$notify('warn', array('reason'=>'Backup operation failed', 'target'=>$options['target_file']));
+		if(!file_put_contents($options['target_file'], $data)){
+			$notify('warn', array('reason'=>'Failed writing to file', 'target'=>$options['target_file']));
+			if(!rename($options['target_file'].'.bak', $options['target_file']))
+				$notify('error', array('reason'=>'Rollback operation failed', 'target'=>$options['target_file'].'.bak'));
+			return;
+		}
 		if($options['try_run']){
 			
 		}
@@ -100,7 +104,6 @@
 				'https://raw.github.com/uuf6429/php-script-updater/master/update_script.php',
 				array(
 					'current_version' => VERSION,
-					'version_regex' => '',
 					'try_run' => true,
 					'on_event' => 'event_handler',
 				)
