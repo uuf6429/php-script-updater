@@ -13,6 +13,8 @@ That's when I wrote this update functionality right into the script. Happens I e
 Usage and Options
 -----------------
 
+Copy & paste the function into the script you want to make updatable (or as a separate file to include in your script) and call the function when you want to run the update!
+
 The function takes two parameters: *target update url* and *an array of options*:
 
 | Option Name      | Default Value                                                                   | Description                                                               |
