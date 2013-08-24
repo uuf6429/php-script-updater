@@ -90,11 +90,12 @@
 	// MAIN CLI CODE
 	
 	switch((isset($argv) && isset($argv[1])) ? $argv[1] : ''){
-		case '-v': case 'version':
+		case 'version':
+			date_default_timezone_set('Europe/Malta');
 			write_ln(basename(__FILE__, '.php').' '.VERSION);
 			write_ln('Copyright (c) 2013-'.date('Y').' Christian Sciberras');
 			exit(0);
-		case '-u': case 'update':
+		case 'update':
 			update_script(
 				'https://raw.github.com/uuf6429/php-script-updater/master/update_script.php',
 				array(
@@ -105,9 +106,13 @@
 				)
 			);
 			exit(defined('IS_ERROR') ? 1 : 0);
-		default:
-			write_ln('Usage: '.basename(__FILE__, '.php').' --update    Show script version');
-			write_ln('       '.basename(__FILE__, '.php').' --version   Updates script file');
+		case '': case 'help':
+			write_ln('Usage: '.basename(__FILE__, '.php').' help      This help screen');
+			write_ln('       '.basename(__FILE__, '.php').' update    Show script version');
+			write_ln('       '.basename(__FILE__, '.php').' version   Updates script file');
 			exit(0);
+		default:
+			error_ln('Could not understand option "'.$argv[1].'", see "'.basename(__FILE__, '.php').' help" for usage details.');
+			exit(1);
 	}
 	
