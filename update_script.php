@@ -35,7 +35,7 @@
 		if($should_fail === false)
 			return $notify('error', array('reason'=>'Update cancelled by user code')) && false;
 		if($v_diff === 0 && !$options['force_update'])
-			return $notify('warn', array('reason'=>'Update not required')) && false;
+			return $notify('already_uptodate') && false;
 		if($v_diff === -1 && !$options['force_update'])
 			return $notify('warn', array('reason'=>'Local file is newer than remote one', 'curr_version'=>$options['current_version'], 'next_version'=>$next_version)) && false;
 		if(!rename($options['target_file'], $options['target_file'].'.bak'))
