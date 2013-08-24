@@ -26,7 +26,7 @@
 			return $notify('error', array('reason'=>'Could not determine version of target file', 'target'=>$data, 'result'=>$next_version)) && false;
 		if(!($next_version = array_pop($next_version)))
 			return $notify('error', array('reason'=>'Version of target file is empty', 'target'=>$data, 'result'=>$next_version)) && false;
-		$v_diff = version_compare($next_version, $options['current_version'], $next_version);
+		$v_diff = version_compare($next_version, $options['current_version']);
 		$should_fail = $notify('version_check', array('intention'=>$intentions[$v_diff], 'curr_version'=>$options['current_version'], 'next_version'=>$next_version));
 		if($should_fail === false)
 			return $notify('error', array('reason'=>'Update cancelled by user code')) && false;
@@ -58,7 +58,7 @@
 	 * The code below is a sample of how the function is to be used.
 	 */
 	
-	define('VERSION', '0.0.1');
+	define('VERSION', '0.0.2');
 	
 	// no web access pls!
 	if(isset($_SERVER['SERVER_NAME']) || !isset($argv)){
