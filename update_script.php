@@ -8,12 +8,12 @@
 	function update_script($update_url, $options){
 		// initialize
 		$options = array_merge(array(
-			'current_version' => '0.0.0',				// Version of the current file/script.
-			'version_regex' => '',						// Regular expression for finding version in target file.
-			'try_run' => true,							// Try running downloaded file to ensure it works.
-			'on_event' => create_function('', ''),		// Used by updater to notify callee on event changes.
-			'target_file' => __FILE__,					// The file to be overwritten by the updater.
-			'force_update' => false,					// Force local file to be overwritten by remote file regardless of version.
+			'current_version' => '0.0.0',															// Version of the current file/script.
+			'version_regex' => '/define\\(\\s*[\'"]version[\'"]\\s*,\\s*[\'"](.*?)[\'"]\\s*\\)\/i',	// Regular expression for finding version in target file.
+			'try_run' => true,																		// Try running downloaded file to ensure it works.
+			'on_event' => create_function('', ''),													// Used by updater to notify callee on event changes.
+			'target_file' => __FILE__,																// The file to be overwritten by the updater.
+			'force_update' => false,																// Force local file to be overwritten by remote file regardless of version.
 		), (array)$options);
 		$notify = $options['on_event'];
 		$next_version = null;
