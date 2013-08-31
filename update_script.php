@@ -24,8 +24,10 @@
 		static $intentions = array(-1=>'fail',0=>'ignore',1=>'update');
 		// process
 		$notify('start');
+		$notify('before_download', array('url'=>$update_url));
 		if(!($data = file_get_contents($update_url)))
 			return $notify('error', array('reason'=>'File download failed', 'target'=>$update_url)) && false;
+		$notify('after_download', array('data'=>&$data));
 		if(!preg_match($options['version_regex'], $data, $next_version))
 			return $notify('error', array('reason'=>'Could not determine version of target file', 'target'=>$data, 'result'=>$next_version)) && false;
 		if(!($next_version = array_pop($next_version)))
@@ -38,7 +40,7 @@
 			return $notify('already_uptodate') && false;
 		if($v_diff === -1 && !$options['force_update'])
 			return $notify('warn', array('reason'=>'Local file is newer than remote one', 'curr_version'=>$options['current_version'], 'next_version'=>$next_version)) && false;
-		if(!rename($options['target_file'], $options['target_file'].'.bak'))
+		if(!copy($options['target_file'], $options['target_file'].'.bak'))
 			$notify('warn', array('reason'=>'Backup operation failed', 'target'=>$options['target_file']));
 		if(!file_put_contents($options['target_file'], $data)){
 			$notify('warn', array('reason'=>'Failed writing to file', 'target'=>$options['target_file']));
@@ -65,7 +67,7 @@
 		}
 		if(!unlink($options['target_file'].'.bak'))
 			$notify('warn', array('reason'=>'Cleanup operation failed', 'target'=>$options['target_file'].'.bak'));
-		$notify('finish');
+		$notify('finish', array('new_version'=>$next_version));
 	}
 	
 	
